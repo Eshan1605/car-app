@@ -1,12 +1,24 @@
-# Step 1: Base image with Java 17
+# Step 1: Build stage
+FROM maven:3.9.4-eclipse-temurin-17 AS build
+WORKDIR /app
+
+# Copy pom.xml and download dependencies first (for caching)
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+# Copy project source and build
+COPY src ./src
+RUN mvn clean package -DskipTests
+
+# Step 2: Runtime stage (smaller image)
 FROM eclipse-temurin:17-jdk
+WORKDIR /app
 
-# Step 2: Add jar to container
-ARG JAR_FILE=target/*.jar
-COPY ${JAR_FILE} app.jar
+# Copy the built jar from the build stage
+COPY --from=build /app/target/*.jar app.jar
 
-# Step 3: Expose port
+# Expose the port
 EXPOSE 8080
 
-# Step 4: Run the jar
-ENTRYPOINT ["java", "-jar", "/app.jar"]
+# Run the jar
+ENTRYPOINT ["java", "-jar", "app.jar"]
