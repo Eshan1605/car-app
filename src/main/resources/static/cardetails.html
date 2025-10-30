@@ -92,7 +92,7 @@
     const editButton = document.getElementById("editButton");
 
     if(carId){
-      fetch(`http://localhost:8080/cars/${carId}`)
+      fetch(`/cars/${carId}`)
         .then(res => res.json())
         .then(car => {
           document.getElementById("carImage").src = car.imageUrl;

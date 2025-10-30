@@ -132,7 +132,7 @@
 
     function searchCars() {
       const query = document.getElementById("search-input").value;
-      let url = "http://localhost:8080/cars";
+      let url = "/cars";
       if(query) {
         url += `?search=${encodeURIComponent(query)}`;
       }
