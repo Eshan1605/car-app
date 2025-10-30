@@ -1,117 +1,158 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Add New Car</title>
+  <link rel="stylesheet" href="styles.css" />
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin-top: 50px;
+    main {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 80vh;
     }
+
     form {
-      max-width: 400px;
-      margin: auto;
-      text-align: left;
-      border: 1px solid #ccc;
-      padding: 20px;
-      border-radius: 10px;
-    }
-    form input, form button {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      max-width: 500px;
       width: 100%;
-      padding: 8px;
-      margin: 5px 0;
-      border-radius: 5px;
-      border: 1px solid #ccc;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
-    form button {
-      background-color: #28a745;
+
+    form h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: 600;
+      color: #444;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 15px;
+    }
+
+    textarea {
+      resize: vertical;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #28a745;
       color: white;
       border: none;
-      cursor: pointer;
-    }
-    form button:hover {
-      background-color: #218838;
-    }
-    .back-button {
-      display: inline-block;
+      border-radius: 6px;
       margin-top: 20px;
-      padding: 10px 20px;
-      text-decoration: none;
-      background-color: #007bff;
-      color: white;
-      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
     }
-    .back-button:hover {
-      background-color: #0056b3;
+
+    button:hover {
+      background: #218838;
+    }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 15px;
+      text-decoration: none;
+      color: #007bff;
+      font-weight: 500;
+    }
+
+    .back-link:hover {
+      color: #0056b3;
     }
   </style>
 </head>
 <body>
-  <h1>Add a New Car</h1>
+  <header>
+    <h2 class="logo">🚗 Car App</h2>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="addcar.html" class="active">Add Car</a>
+    </nav>
+  </header>
 
-  <form id="add-car-form">
-    <label>Brand:</label>
-    <input type="text" id="brand" required>
+  <main>
+    <form id="add-car-form">
+      <h2>Add a New Car</h2>
 
-    <label>Model:</label>
-    <input type="text" id="model" required>
+      <label>Brand:</label>
+      <input type="text" id="brand" required>
 
-    <label>Price:</label>
-    <input type="number" id="price" required>
+      <label>Model:</label>
+      <input type="text" id="model" required>
 
-    <label>Image URL:</label>
-    <input type="text" id="imageUrl" required>
-	
-	<label>Year:</label>
-	<input type="number" id="year" required>
+      <label>Price:</label>
+      <input type="number" id="price" required>
 
-	<label>Fuel Type:</label>
-	<input type="text" id="fuelType" required>
+      <label>Image URL:</label>
+      <input type="text" id="imageUrl" required>
 
-	<label>Mileage (km/l):</label>
-	<input type="number" step="0.1" id="mileage" required>
+      <label>Year:</label>
+      <input type="number" id="year" required>
 
-	<label>Description:</label>
-	<input type="text" id="description" required>
+      <label>Fuel Type:</label>
+      <input type="text" id="fuelType" required>
 
+      <label>Mileage (km/l):</label>
+      <input type="number" step="0.1" id="mileage" required>
 
-    <button type="submit">Add Car</button>
-  </form>
+      <label>Description:</label>
+      <textarea id="description" rows="3" required></textarea>
 
-  <a href="index.html" class="back-button">Back to Home</a>
+      <button type="submit">Add Car</button>
+      <a href="index.html" class="back-link">← Back to Home</a>
+    </form>
+  </main>
 
   <script>
     document.getElementById("add-car-form").addEventListener("submit", function(e) {
       e.preventDefault();
 
-	  const newCar = {
-	    brand: document.getElementById("brand").value,
-	    model: document.getElementById("model").value,
-	    price: parseFloat(document.getElementById("price").value),
-	    imageUrl: document.getElementById("imageUrl").value,
-	    year: parseInt(document.getElementById("year").value),
-	    fuelType: document.getElementById("fuelType").value,
-	    mileage: parseFloat(document.getElementById("mileage").value),
-	    description: document.getElementById("description").value
-	  };
-
+      const newCar = {
+        brand: document.getElementById("brand").value,
+        model: document.getElementById("model").value,
+        price: parseFloat(document.getElementById("price").value),
+        imageUrl: document.getElementById("imageUrl").value,
+        year: parseInt(document.getElementById("year").value),
+        fuelType: document.getElementById("fuelType").value,
+        mileage: parseFloat(document.getElementById("mileage").value),
+        description: document.getElementById("description").value
+      };
 
       fetch("/cars", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newCar)
       })
-      .then(res => res.json())
-      .then(data => {
-        alert("Car added successfully!");
-        document.getElementById("add-car-form").reset();
-        // Optional: Redirect back to homepage automatically
-        window.location.href = "index.html";
+      .then(res => {
+        if (res.ok) {
+          alert("Car added successfully!");
+          window.location.href = "index.html";
+        } else {
+          alert("Failed to add car. Please try again.");
+        }
       })
-      .catch(err => console.error(err));
+      .catch(err => {
+        console.error(err);
+        alert("Error adding car.");
+      });
     });
   </script>
 </body>

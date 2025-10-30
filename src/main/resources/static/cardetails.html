@@ -4,94 +4,117 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Car Details</title>
+  <link rel="stylesheet" href="styles.css" />
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 40px;
-      background-color: #f8f9fa;
+    main {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 80vh;
     }
 
-    .card {
+    .car-card {
       background: white;
       border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      max-width: 500px;
-      margin: auto;
+      padding: 30px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
       text-align: center;
     }
 
-    img {
+    .car-card img {
       width: 100%;
+      max-height: 300px;
+      object-fit: cover;
       border-radius: 10px;
       margin-bottom: 20px;
     }
 
-    h2 {
-      color: #333;
+    .car-card h2 {
+      font-size: 26px;
       margin-bottom: 10px;
+      color: #222;
     }
 
-    p {
+    .car-card p {
       font-size: 16px;
       color: #555;
       margin: 6px 0;
     }
 
-    a {
-      display: inline-block;
+    .car-actions {
       margin-top: 20px;
-      text-decoration: none;
-      background: #007bff;
-      color: white;
-      padding: 10px 16px;
-      border-radius: 6px;
     }
 
-    a:hover {
+    .car-actions a {
+      display: inline-block;
+      padding: 10px 18px;
+      border-radius: 6px;
+      text-decoration: none;
+      margin: 6px;
+      font-weight: 500;
+      color: white;
+      transition: background 0.3s;
+    }
+
+    .btn-back {
+      background: #007bff;
+    }
+
+    .btn-back:hover {
       background: #0056b3;
     }
 
-    #editButton {
-      display: inline-block;
-      margin-top: 10px;
-      text-decoration: none;
+    .btn-edit {
       background: #ffc107;
       color: black;
-      padding: 10px 16px;
-      border-radius: 6px;
     }
 
-    #editButton:hover {
+    .btn-edit:hover {
       background: #e0a800;
     }
-	#deleteButton:hover {
-	  background: #c82333;
-	}
+
+    .btn-delete {
+      background: #dc3545;
+    }
+
+    .btn-delete:hover {
+      background: #c82333;
+    }
   </style>
 </head>
 <body>
-  <div class="card">
-    <img id="carImage" src="" alt="Car Image" />
-    <h2 id="carName"></h2>
-    <p><strong>Brand:</strong> <span id="carBrand"></span></p>
-    <p><strong>Model:</strong> <span id="carModel"></span></p>
-    <p><strong>Price:</strong> ₹<span id="carPrice"></span></p>
+  <header>
+    <h2 class="logo">🚗 Car App</h2>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="addcar.html">Add Car</a>
+    </nav>
+  </header>
 
-    <!-- Additional details -->
-    <div id="additionalDetails"></div>
+  <main>
+    <div class="car-card">
+      <img id="carImage" src="" alt="Car Image" />
+      <h2 id="carName"></h2>
 
-    <!-- Action buttons -->
-    <a href="index.html">← Back to Cars</a>
-    <a id="editButton" href="#">✏️ Edit Car</a>
-	<a id="deleteButton" href="#" style="background: #dc3545; color: white; margin-left: 10px;">🗑️ Delete Car</a>
-  </div>
+      <p><strong>Brand:</strong> <span id="carBrand"></span></p>
+      <p><strong>Model:</strong> <span id="carModel"></span></p>
+      <p><strong>Price:</strong> ₹<span id="carPrice"></span></p>
+
+      <div id="additionalDetails"></div>
+
+      <div class="car-actions">
+        <a href="index.html" class="btn-back">← Back</a>
+        <a id="editButton" href="#" class="btn-edit">✏️ Edit</a>
+        <a id="deleteButton" href="#" class="btn-delete">🗑️ Delete</a>
+      </div>
+    </div>
+  </main>
 
   <script>
     const carId = new URLSearchParams(window.location.search).get("id");
-    const editButton = document.getElementById("editButton");
 
-    if(carId){
+    if (carId) {
       fetch(`/cars/${carId}`)
         .then(res => res.json())
         .then(car => {
@@ -101,16 +124,15 @@
           document.getElementById("carModel").innerText = car.model;
           document.getElementById("carPrice").innerText = car.price;
 
-          const additionalDiv = document.getElementById("additionalDetails");
-          additionalDiv.innerHTML = `
+          const details = document.getElementById("additionalDetails");
+          details.innerHTML = `
             <p><strong>Year:</strong> ${car.year}</p>
             <p><strong>Fuel Type:</strong> ${car.fuelType}</p>
             <p><strong>Mileage:</strong> ${car.mileage} km/l</p>
             <p><strong>Description:</strong> ${car.description}</p>
           `;
 
-          // Set Edit button link dynamically
-          editButton.href = `edit-car.html?id=${car.id}`;
+          document.getElementById("editButton").href = `edit-car.html?id=${car.id}`;
         })
         .catch(err => {
           console.error(err);
@@ -119,30 +141,26 @@
     } else {
       alert("No car selected.");
     }
-	const deleteButton = document.getElementById("deleteButton");
 
-	deleteButton.addEventListener("click", function(e) {
-	  e.preventDefault();
-
-	  if(confirm("Are you sure you want to delete this car? This action cannot be undone.")) {
-	    fetch(`/cars/${carId}`, {
-	      method: "DELETE"
-	    })
-	    .then(res => {
-	      if(res.ok) {
-	        alert("Car deleted successfully!");
-	        window.location.href = "index.html"; // redirect to home
-	      } else {
-	        alert("Failed to delete car. Please try again.");
-	      }
-	    })
-	    .catch(err => {
-	      console.error(err);
-	      alert("Error deleting car.");
-	    });
-	  }
-	});
-
+    // Delete car
+    document.getElementById("deleteButton").addEventListener("click", e => {
+      e.preventDefault();
+      if (confirm("Are you sure you want to delete this car?")) {
+        fetch(`/cars/${carId}`, { method: "DELETE" })
+          .then(res => {
+            if (res.ok) {
+              alert("Car deleted successfully!");
+              window.location.href = "index.html";
+            } else {
+              alert("Failed to delete car. Please try again.");
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            alert("Error deleting car.");
+          });
+      }
+    });
   </script>
 </body>
 </html>
