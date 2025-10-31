@@ -24,26 +24,41 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf().disable()
+            .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/index.html", "/cars", "/cars/**", "/images/**").permitAll()
-                .requestMatchers("/addcar.html", "/edit-car.html", "/cardetails.html").permitAll() // allow HTML files
+                // Public pages and assets
+                .requestMatchers("/login", "/register","/auth/**", "/register.html",
+                                 "/css/**", "/js/**", "/images/**").permitAll()
+
+                // Allow anyone logged in to view cars
+                .requestMatchers("/", "/index.html", "/cars", "/cars/view/**").authenticated()
+
+                // Restrict modification actions to ADMIN only
+                .requestMatchers("/cars/add", "/cars/edit/**", "/cars/delete/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/cars/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/cars/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/cars/**").hasRole("ADMIN")
+
+                // Everything else requires login
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
-                    .loginPage("/login.html") // custom login page
-                    .loginProcessingUrl("/login") // handled automatically by Spring
-                    .defaultSuccessUrl("/index.html", true)
-                    .permitAll()
-                )
-                .logout(logout -> logout
-                    .logoutUrl("/logout")
-                    .logoutSuccessUrl("/login.html?logout")
-                    .permitAll()
-                );
+                .loginPage("/login.html")
+                .loginProcessingUrl("/login")
+                .defaultSuccessUrl("/index.html", true)
+                .failureUrl("/login.html?error=true")
+                .permitAll()
+            )
+            .logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login.html?logout")
+                .invalidateHttpSession(true)
+                .clearAuthentication(true)
+                .deleteCookies("JSESSIONID")
+                .permitAll()
+            )
+            .httpBasic(httpBasic -> httpBasic.disable())
+            .headers(headers -> headers.cacheControl(cache -> cache.disable()));
 
         return http.build();
     }
@@ -62,6 +77,4 @@ public class SecurityConfig {
                 .passwordEncoder(passwordEncoder());
         return authBuilder.build();
     }
-
 }
-
