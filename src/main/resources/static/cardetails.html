@@ -68,9 +68,10 @@
     #editButton:hover {
       background: #e0a800;
     }
-	#deleteButton:hover {
-	  background: #c82333;
-	}
+
+    #deleteButton:hover {
+      background: #c82333;
+    }
   </style>
 </head>
 <body>
@@ -81,71 +82,84 @@
     <p><strong>Model:</strong> <span id="carModel"></span></p>
     <p><strong>Price:</strong> ₹<span id="carPrice"></span></p>
 
-    <!-- Additional details -->
     <div id="additionalDetails"></div>
 
-    <!-- Action buttons -->
     <a href="index.html">← Back to Cars</a>
     <a id="editButton" href="#">✏️ Edit Car</a>
-	<a id="deleteButton" href="#" style="background: #dc3545; color: white; margin-left: 10px;">🗑️ Delete Car</a>
+    <a id="deleteButton" href="#" style="background: #dc3545; color: white; margin-left: 10px;">🗑️ Delete Car</a>
   </div>
 
   <script>
+    // Disable caching after logout
+    window.history.pushState(null, "", window.location.href);
+    window.onpopstate = function () {
+      window.history.pushState(null, "", window.location.href);
+    };
+
     const carId = new URLSearchParams(window.location.search).get("id");
     const editButton = document.getElementById("editButton");
+    const deleteButton = document.getElementById("deleteButton");
 
-    if(carId){
-      fetch(`/cars/${carId}`)
-        .then(res => res.json())
-        .then(car => {
+    // Check login and role
+    const loggedInUser = sessionStorage.getItem("loggedInUser");
+    if (!loggedInUser) {
+      window.location.href = "login.html";
+    } else {
+      const user = JSON.parse(loggedInUser);
+      if (user.role !== "ADMIN") {
+        editButton.style.display = "none";
+        deleteButton.style.display = "none";
+      }
+    }
+
+    if (carId) {
+      fetch("/cars/" + carId)
+        .then(function(res) { return res.json(); })
+        .then(function(car) {
           document.getElementById("carImage").src = car.imageUrl;
-          document.getElementById("carName").innerText = `${car.brand} ${car.model}`;
+          document.getElementById("carName").innerText = car.brand + " " + car.model;
           document.getElementById("carBrand").innerText = car.brand;
           document.getElementById("carModel").innerText = car.model;
           document.getElementById("carPrice").innerText = car.price;
 
-          const additionalDiv = document.getElementById("additionalDetails");
-          additionalDiv.innerHTML = `
-            <p><strong>Year:</strong> ${car.year}</p>
-            <p><strong>Fuel Type:</strong> ${car.fuelType}</p>
-            <p><strong>Mileage:</strong> ${car.mileage} km/l</p>
-            <p><strong>Description:</strong> ${car.description}</p>
-          `;
+          var additionalDiv = document.getElementById("additionalDetails");
+          additionalDiv.innerHTML =
+            "<p><strong>Year:</strong> " + car.year + "</p>" +
+            "<p><strong>Fuel Type:</strong> " + car.fuelType + "</p>" +
+            "<p><strong>Mileage:</strong> " + car.mileage + " km/l</p>" +
+            "<p><strong>Description:</strong> " + car.description + "</p>";
 
           // Set Edit button link dynamically
-          editButton.href = `edit-car.html?id=${car.id}`;
+          editButton.href = "edit-car.html?id=" + car.id;
         })
-        .catch(err => {
+        .catch(function(err) {
           console.error(err);
           alert("Error loading car details.");
         });
     } else {
       alert("No car selected.");
     }
-	const deleteButton = document.getElementById("deleteButton");
 
-	deleteButton.addEventListener("click", function(e) {
-	  e.preventDefault();
-
-	  if(confirm("Are you sure you want to delete this car? This action cannot be undone.")) {
-	    fetch(`/cars/${carId}`, {
-	      method: "DELETE"
-	    })
-	    .then(res => {
-	      if(res.ok) {
-	        alert("Car deleted successfully!");
-	        window.location.href = "index.html"; // redirect to home
-	      } else {
-	        alert("Failed to delete car. Please try again.");
-	      }
-	    })
-	    .catch(err => {
-	      console.error(err);
-	      alert("Error deleting car.");
-	    });
-	  }
-	});
-
+    deleteButton.addEventListener("click", function(e) {
+      e.preventDefault();
+      if (confirm("Are you sure you want to delete this car? This action cannot be undone.")) {
+        fetch("/cars/" + carId, {
+          method: "DELETE"
+        })
+        .then(function(res) {
+          if (res.ok) {
+            alert("Car deleted successfully!");
+            window.location.href = "index.html";
+          } else {
+            alert("Failed to delete car. Please try again.");
+          }
+        })
+        .catch(function(err) {
+          console.error(err);
+          alert("Error deleting car.");
+        });
+      }
+    });
   </script>
 </body>
 </html>
