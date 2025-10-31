@@ -90,7 +90,7 @@
   </div>
 
   <script>
-    // Disable caching after logout
+    // Prevent browser caching after logout
     window.history.pushState(null, "", window.location.href);
     window.onpopstate = function () {
       window.history.pushState(null, "", window.location.href);
@@ -113,40 +113,60 @@
     }
 
     if (carId) {
-      fetch("/cars/" + carId)
-        .then(function(res) { return res.json(); })
-        .then(function(car) {
-          document.getElementById("carImage").src = car.imageUrl;
-          document.getElementById("carName").innerText = car.brand + " " + car.model;
-          document.getElementById("carBrand").innerText = car.brand;
-          document.getElementById("carModel").innerText = car.model;
-          document.getElementById("carPrice").innerText = car.price;
+      fetch("/cars/" + carId, {
+        method: "GET",
+        headers: { "Accept": "application/json" }
+      })
+      .then(response => {
+        if (response.status === 401 || response.redirected) {
+          // If session expired or redirected to login
+          alert("Your session has expired. Please log in again.");
+          window.location.href = "login.html";
+          return null;
+        }
+        if (!response.ok) {
+          throw new Error("Failed to load car details");
+        }
+        return response.json();
+      })
+      .then(car => {
+        if (!car) return;
+        document.getElementById("carImage").src = car.imageUrl;
+        document.getElementById("carName").innerText = car.brand + " " + car.model;
+        document.getElementById("carBrand").innerText = car.brand;
+        document.getElementById("carModel").innerText = car.model;
+        document.getElementById("carPrice").innerText = car.price;
 
-          var additionalDiv = document.getElementById("additionalDetails");
-          additionalDiv.innerHTML =
-            "<p><strong>Year:</strong> " + car.year + "</p>" +
-            "<p><strong>Fuel Type:</strong> " + car.fuelType + "</p>" +
-            "<p><strong>Mileage:</strong> " + car.mileage + " km/l</p>" +
-            "<p><strong>Description:</strong> " + car.description + "</p>";
+        const additionalDiv = document.getElementById("additionalDetails");
+        additionalDiv.innerHTML =
+          "<p><strong>Year:</strong> " + car.year + "</p>" +
+          "<p><strong>Fuel Type:</strong> " + car.fuelType + "</p>" +
+          "<p><strong>Mileage:</strong> " + car.mileage + " km/l</p>" +
+          "<p><strong>Description:</strong> " + car.description + "</p>";
 
-          // Set Edit button link dynamically
-          editButton.href = "edit-car.html?id=" + car.id;
-        })
-        .catch(function(err) {
-          console.error(err);
-          alert("Error loading car details.");
-        });
+        // Set Edit button link dynamically
+        editButton.href = "edit-car.html?id=" + car.id;
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Error loading car details.");
+        window.location.href = "login.html";
+      });
     } else {
       alert("No car selected.");
     }
 
-    deleteButton.addEventListener("click", function(e) {
+    // Delete handler (admin only)
+    deleteButton.addEventListener("click", e => {
       e.preventDefault();
-      if (confirm("Are you sure you want to delete this car? This action cannot be undone.")) {
-        fetch("/cars/" + carId, {
-          method: "DELETE"
-        })
-        .then(function(res) {
+      if (confirm("Are you sure you want to delete this car?")) {
+        fetch("/cars/" + carId, { method: "DELETE" })
+        .then(res => {
+          if (res.status === 401 || res.redirected) {
+            alert("Your session has expired. Please log in again.");
+            window.location.href = "login.html";
+            return;
+          }
           if (res.ok) {
             alert("Car deleted successfully!");
             window.location.href = "index.html";
@@ -154,7 +174,7 @@
             alert("Failed to delete car. Please try again.");
           }
         })
-        .catch(function(err) {
+        .catch(err => {
           console.error(err);
           alert("Error deleting car.");
         });
