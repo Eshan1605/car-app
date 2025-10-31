@@ -8,6 +8,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -26,20 +27,9 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                // Public pages and assets
-                .requestMatchers("/login", "/register","/auth/**", "/register.html",
-                                 "/css/**", "/js/**", "/images/**").permitAll()
-
-                // Allow anyone logged in to view cars
-                .requestMatchers("/", "/index.html", "/cars", "/cars/view/**").authenticated()
-
-                // Restrict modification actions to ADMIN only
+                .requestMatchers("/", "/index.html", "/login", "/register", "/css/**", "/js/**", "/images/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/cars/**").hasAnyRole("USER", "ADMIN")
                 .requestMatchers("/cars/add", "/cars/edit/**", "/cars/delete/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.POST, "/cars/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/cars/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/cars/**").hasRole("ADMIN")
-
-                // Everything else requires login
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
@@ -58,7 +48,8 @@ public class SecurityConfig {
                 .permitAll()
             )
             .httpBasic(httpBasic -> httpBasic.disable())
-            .headers(headers -> headers.cacheControl(cache -> cache.disable()));
+            // ✅ Enable cache control (prevents back button after logout)
+            .headers(headers -> headers.cacheControl(Customizer.withDefaults()));
 
         return http.build();
     }
