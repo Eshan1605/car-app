@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Register - Car App</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .register-box {
+      background-color: #ffffff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      width: 350px;
+    }
+
+    .register-box h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 20px;
+    }
+
+    .register-box input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .register-box button {
+      width: 100%;
+      background-color: #007bff;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .register-box button:hover {
+      background-color: #0056b3;
+    }
+
+    .register-box a {
+      text-decoration: none;
+      display: block;
+      text-align: center;
+      margin-top: 10px;
+      color: #007bff;
+    }
+  </style>
+</head>
+<body>
+  <div class="register-box">
+    <h2>Create Account</h2>
+    <input type="text" id="username" placeholder="Enter Username" required>
+    <input type="password" id="password" placeholder="Enter Password" required>
+    <button onclick="registerUser()">Register</button>
+    <a href="index.html">Back to Home</a>
+  </div>
+
+  <script>
+    function registerUser() {
+      const user = {
+        username: document.getElementById("username").value,
+        password: document.getElementById("password").value
+      };
+
+      fetch("/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(user)
+      })
+      .then(res => res.text())
+      .then(data => {
+        alert(data);
+        if (data.includes("successfully")) {
+          window.location.href = "index.html"; // redirect to home or login
+        }
+      })
+      .catch(err => console.error(err));
+    }
+  </script>
+</body>
+</html>
