@@ -34,14 +34,16 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
-                .loginPage("/login.html")
-                .permitAll()
-                .defaultSuccessUrl("/index.html", true)
-            )
-            .logout(logout -> logout
-                .logoutSuccessUrl("/index.html")
-                .permitAll()
-            );
+                    .loginPage("/login.html") // custom login page
+                    .loginProcessingUrl("/login") // handled automatically by Spring
+                    .defaultSuccessUrl("/index.html", true)
+                    .permitAll()
+                )
+                .logout(logout -> logout
+                    .logoutUrl("/logout")
+                    .logoutSuccessUrl("/login.html?logout")
+                    .permitAll()
+                );
 
         return http.build();
     }
