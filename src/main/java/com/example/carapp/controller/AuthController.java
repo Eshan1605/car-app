@@ -3,12 +3,12 @@ package com.example.carapp.controller;
 import com.example.carapp.model.UserRole;
 import com.example.carapp.repository.UserRoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = "*")
 public class AuthController {
 
     @Autowired
@@ -18,15 +18,15 @@ public class AuthController {
     private PasswordEncoder passwordEncoder;
 
     @PostMapping("/register")
-    public String registerUser(@RequestBody UserRole user) {
+    public ResponseEntity<String> register(@RequestBody UserRole user) {
         if (userRoleRepository.findByUsername(user.getUsername()).isPresent()) {
-            return "Username already exists!";
+            return ResponseEntity.badRequest().body("Username already exists");
         }
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRole("USER"); // default role for new registrations
+        user.setRole("USER");
         userRoleRepository.save(user);
-        return "User registered successfully!";
+
+        return ResponseEntity.ok("User registered successfully!");
     }
 }
-
