@@ -4,140 +4,89 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Edit Car</title>
-  <link rel="stylesheet" href="styles.css">
-
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #e3f2fd, #ffffff);
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-    }
-
-    .container {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-      width: 90%;
-      max-width: 550px;
-      margin: 40px auto;
-      padding: 30px 40px;
-      animation: fadeIn 0.6s ease-in-out;
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
+      margin: 40px;
     }
 
     h1 {
       text-align: center;
-      color: #1e88e5;
-      font-size: 26px;
-      margin-bottom: 20px;
     }
 
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: 600;
-      color: #333;
+    form {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
 
-    input, textarea {
+    input, textarea, button {
       width: 100%;
-      padding: 12px;
-      margin-top: 6px;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 6px;
       border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 15px;
-      box-sizing: border-box;
-      transition: all 0.3s ease;
-    }
-
-    input:focus, textarea:focus {
-      border-color: #1e88e5;
-      outline: none;
-      box-shadow: 0 0 5px rgba(30, 136, 229, 0.3);
     }
 
     button {
-      width: 100%;
-      margin-top: 25px;
-      padding: 12px;
-      border: none;
       background: #28a745;
       color: white;
-      font-size: 16px;
-      font-weight: bold;
-      border-radius: 8px;
+      border: none;
       cursor: pointer;
-      transition: background 0.3s ease;
     }
 
     button:hover {
       background: #218838;
     }
 
-    a.back-link {
+    a {
       display: inline-block;
-      margin-top: 18px;
-      color: #1e88e5;
+      margin-top: 10px;
       text-decoration: none;
-      font-weight: 500;
-      text-align: center;
-      width: 100%;
-    }
-
-    a.back-link:hover {
-      text-decoration: underline;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
+      color: #007bff;
     }
   </style>
 </head>
-
 <body>
-  <div class="container">
-    <h1>Edit Car Details</h1>
+  <h1>Edit Car</h1>
+  <form id="editCarForm">
+    <label>Brand:</label>
+    <input type="text" id="brand" required>
 
-    <form id="editCarForm">
-      <label for="brand">Brand</label>
-      <input type="text" id="brand" required>
+    <label>Model:</label>
+    <input type="text" id="model" required>
 
-      <label for="model">Model</label>
-      <input type="text" id="model" required>
+    <label>Price:</label>
+    <input type="number" id="price" required>
 
-      <label for="price">Price (₹)</label>
-      <input type="number" id="price" required>
+    <label>Image URL:</label>
+    <input type="text" id="imageUrl" required>
 
-      <label for="imageUrl">Image URL</label>
-      <input type="text" id="imageUrl" required>
+    <label>Year:</label>
+    <input type="number" id="year" required>
 
-      <label for="year">Year</label>
-      <input type="number" id="year" required>
+    <label>Fuel Type:</label>
+    <input type="text" id="fuelType" required>
 
-      <label for="fuelType">Fuel Type</label>
-      <input type="text" id="fuelType" required>
+    <label>Mileage:</label>
+    <input type="number" step="0.1" id="mileage" required>
 
-      <label for="mileage">Mileage (km/l)</label>
-      <input type="number" step="0.1" id="mileage" required>
+    <label>Description:</label>
+    <textarea id="description" rows="3" required></textarea>
 
-      <label for="description">Description</label>
-      <textarea id="description" rows="3" required></textarea>
-
-      <button type="submit">💾 Update Car</button>
-      <a href="index.html" class="back-link">← Back to Home</a>
-    </form>
-  </div>
+    <button type="submit">Update Car</button>
+    <a href="index.html">← Back to Home</a>
+  </form>
 
   <script>
     const carId = new URLSearchParams(window.location.search).get("id");
 
-    // Load car data
-    if (carId) {
+    // Fetch car details and pre-fill form
+    if(carId){
       fetch(`/cars/${carId}`)
         .then(res => res.json())
         .then(car => {
@@ -150,14 +99,11 @@
           document.getElementById("mileage").value = car.mileage;
           document.getElementById("description").value = car.description;
         })
-        .catch(err => {
-          console.error(err);
-          alert("Error loading car details.");
-        });
+        .catch(err => console.error(err));
     }
 
-    // Handle form submit
-    document.getElementById("editCarForm").addEventListener("submit", function(e) {
+    // Handle form submission
+    document.getElementById("editCarForm").addEventListener("submit", function(e){
       e.preventDefault();
 
       const updatedCar = {
@@ -176,18 +122,12 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedCar)
       })
-      .then(res => {
-        if (res.ok) {
-          alert("✅ Car updated successfully!");
-          window.location.href = `cardetails.html?id=${carId}`;
-        } else {
-          alert("❌ Failed to update car. Please try again.");
-        }
+      .then(res => res.json())
+      .then(data => {
+        alert("Car updated successfully!");
+        window.location.href = `cardetails.html?id=${carId}`;
       })
-      .catch(err => {
-        console.error(err);
-        alert("Error updating car.");
-      });
+      .catch(err => console.error(err));
     });
   </script>
 </body>
