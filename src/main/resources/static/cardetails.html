@@ -69,6 +69,12 @@
       background: #e0a800;
     }
 
+    #deleteButton {
+      background: #dc3545;
+      color: white;
+      margin-left: 10px;
+    }
+
     #deleteButton:hover {
       background: #c82333;
     }
@@ -86,11 +92,11 @@
 
     <a href="index.html">← Back to Cars</a>
     <a id="editButton" href="#">✏️ Edit Car</a>
-    <a id="deleteButton" href="#" style="background: #dc3545; color: white; margin-left: 10px;">🗑️ Delete Car</a>
+    <a id="deleteButton" href="#">🗑️ Delete Car</a>
   </div>
 
   <script>
-    // Prevent browser caching after logout
+    // Disable back navigation after logout
     window.history.pushState(null, "", window.location.href);
     window.onpopstate = function () {
       window.history.pushState(null, "", window.location.href);
@@ -100,9 +106,10 @@
     const editButton = document.getElementById("editButton");
     const deleteButton = document.getElementById("deleteButton");
 
-    // Check login and role
+    // Check login session
     const loggedInUser = sessionStorage.getItem("loggedInUser");
     if (!loggedInUser) {
+      alert("Please log in to view car details.");
       window.location.href = "login.html";
     } else {
       const user = JSON.parse(loggedInUser);
@@ -112,58 +119,61 @@
       }
     }
 
+    // Fetch car details
     if (carId) {
-      fetch("/cars/" + carId, {
-        method: "GET",
-        headers: { "Accept": "application/json" }
-      })
-      .then(response => {
-        if (response.status === 401 || response.redirected) {
-          // If session expired or redirected to login
-          alert("Your session has expired. Please log in again.");
-          window.location.href = "login.html";
-          return null;
-        }
-        if (!response.ok) {
-          throw new Error("Failed to load car details");
-        }
-        return response.json();
-      })
-      .then(car => {
-        if (!car) return;
-        document.getElementById("carImage").src = car.imageUrl;
-        document.getElementById("carName").innerText = car.brand + " " + car.model;
-        document.getElementById("carBrand").innerText = car.brand;
-        document.getElementById("carModel").innerText = car.model;
-        document.getElementById("carPrice").innerText = car.price;
+      fetch(`/cars/${carId}`, { method: "GET", headers: { "Accept": "application/json" } })
+        .then(response => {
+          if (response.status === 401) {
+            alert("Session expired. Please log in again.");
+            window.location.href = "login.html";
+            return null;
+          }
+          if (response.status === 404) {
+            alert("Car not found!");
+            window.location.href = "index.html";
+            return null;
+          }
+          if (!response.ok) {
+            throw new Error("Failed to load car details");
+          }
+          return response.json();
+        })
+        .then(car => {
+          if (!car) return;
+          document.getElementById("carImage").src = car.imageUrl || "no-image.jpg";
+          document.getElementById("carName").innerText = `${car.brand} ${car.model}`;
+          document.getElementById("carBrand").innerText = car.brand;
+          document.getElementById("carModel").innerText = car.model;
+          document.getElementById("carPrice").innerText = car.price;
 
-        const additionalDiv = document.getElementById("additionalDetails");
-        additionalDiv.innerHTML =
-          "<p><strong>Year:</strong> " + car.year + "</p>" +
-          "<p><strong>Fuel Type:</strong> " + car.fuelType + "</p>" +
-          "<p><strong>Mileage:</strong> " + car.mileage + " km/l</p>" +
-          "<p><strong>Description:</strong> " + car.description + "</p>";
+          const additionalDiv = document.getElementById("additionalDetails");
+          additionalDiv.innerHTML = `
+            <p><strong>Year:</strong> ${car.year}</p>
+            <p><strong>Fuel Type:</strong> ${car.fuelType}</p>
+            <p><strong>Mileage:</strong> ${car.mileage} km/l</p>
+            <p><strong>Description:</strong> ${car.description}</p>
+          `;
 
-        // Set Edit button link dynamically
-        editButton.href = "edit-car.html?id=" + car.id;
-      })
-      .catch(err => {
-        console.error(err);
-        alert("Error loading car details.");
-        window.location.href = "login.html";
-      });
+          editButton.href = `edit-car.html?id=${car.id}`;
+        })
+        .catch(err => {
+          console.error("Error fetching car:", err);
+          alert("Could not load car details. Please try again.");
+        });
     } else {
-      alert("No car selected.");
+      alert("Invalid request — no car selected.");
+      window.location.href = "index.html";
     }
 
-    // Delete handler (admin only)
+    // Delete Car (Admin only)
     deleteButton.addEventListener("click", e => {
       e.preventDefault();
-      if (confirm("Are you sure you want to delete this car?")) {
-        fetch("/cars/" + carId, { method: "DELETE" })
+      if (!confirm("Are you sure you want to delete this car?")) return;
+
+      fetch(`/cars/${carId}`, { method: "DELETE" })
         .then(res => {
-          if (res.status === 401 || res.redirected) {
-            alert("Your session has expired. Please log in again.");
+          if (res.status === 401) {
+            alert("Session expired. Please log in again.");
             window.location.href = "login.html";
             return;
           }
@@ -171,14 +181,13 @@
             alert("Car deleted successfully!");
             window.location.href = "index.html";
           } else {
-            alert("Failed to delete car. Please try again.");
+            alert("Failed to delete car.");
           }
         })
         .catch(err => {
-          console.error(err);
-          alert("Error deleting car.");
+          console.error("Error deleting car:", err);
+          alert("Error deleting car. Please try again later.");
         });
-      }
     });
   </script>
 </body>

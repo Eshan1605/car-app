@@ -11,6 +11,26 @@
       font-family: Arial, sans-serif;
       text-align: center;
       margin-top: 20px;
+      background-color: #f8f9fa;
+    }
+
+    header {
+      text-align: right;
+      padding: 10px;
+      background: #343a40;
+    }
+
+    header a {
+      text-decoration: none;
+      color: white;
+      background: #dc3545;
+      padding: 8px 12px;
+      border-radius: 5px;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
     }
 
     #search-container {
@@ -67,11 +87,16 @@
       width: 300px;
       border-radius: 10px;
       text-align: center;
+      background: white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
     .car-card img {
       width: 100%;
+      height: 200px;
+      object-fit: cover;
       border-radius: 10px;
+      margin-bottom: 10px;
     }
 
     .car-card button {
@@ -90,16 +115,14 @@
   </style>
 </head>
 <body>
-   <header style="text-align:right; padding:10px; background:#343a40;">
-	  <a href="/logout"
-	     style="text-decoration:none; color:white; background:#dc3545; padding:8px 12px; border-radius:5px;">
-	     Logout
-	  </a>
+  <header>
+    <a href="login.html" id="logoutLink">Logout</a>
   </header>
+
   <h1>Car Details</h1>
 
-  <!-- Add Car Button -->
-  <a href="add-car.html" class="add-car-button">Add New Car</a>
+  <!-- Add Car Button (admin only) -->
+  <a href="add-car.html" class="add-car-button" id="addCarButton">Add New Car</a>
 
   <!-- Search Bar -->
   <div id="search-container">
@@ -107,56 +130,102 @@
     <button id="search-button" onclick="searchCars()">Search</button>
   </div>
 
-  <!-- Container for car cards -->
+  <!-- Car Cards -->
   <div id="cars-container"></div>
 
   <script>
     const container = document.getElementById("cars-container");
+    const addCarButton = document.getElementById("addCarButton");
 
-    // Load all cars initially
+    // Prevent caching
+    window.history.pushState(null, "", window.location.href);
+    window.onpopstate = () => window.history.pushState(null, "", window.location.href);
+
+    // Check login
+    const loggedInUser = sessionStorage.getItem("loggedInUser");
+    if (!loggedInUser) {
+      window.location.href = "login.html";
+    }
+
+    const user = JSON.parse(loggedInUser);
+    if (user.role !== "ADMIN") {
+      addCarButton.style.display = "none";
+    }
+
+    // Logout
+    document.getElementById("logoutLink").addEventListener("click", (e) => {
+      e.preventDefault();
+      sessionStorage.removeItem("loggedInUser");
+      window.location.href = "login.html";
+    });
+
+    // Load all cars
     function loadCars() {
       fetch("/cars")
-        .then(res => res.json())
+        .then(res => {
+          if (res.status === 401) {
+            alert("Your session has expired. Please log in again.");
+            sessionStorage.removeItem("loggedInUser");
+            window.location.href = "login.html";
+            return [];
+          }
+          if (!res.ok) {
+            throw new Error("Failed to load cars");
+          }
+          return res.json();
+        })
         .then(data => displayCars(data))
-        .catch(err => console.error(err));
+        .catch(err => {
+          console.error("Error loading cars:", err);
+          container.innerHTML = "<p style='color:red;'>Failed to load cars. Please try again.</p>";
+        });
     }
 
     function displayCars(cars) {
       container.innerHTML = "";
-      if(cars.length > 0) {
-        cars.forEach(car => {
-          container.innerHTML += `
-            <div class="car-card">
-              <h2>${car.brand} ${car.model}</h2>
-              <img src="${car.imageUrl}" alt="Car Image"/>
-              <p>Price: ₹${car.price}</p>
-              <button onclick="viewDetails(${car.id})">More Details</button>
-            </div>
-          `;
-        });
-      } else {
-        container.innerHTML = "<p>No cars found</p>";
+      if (!cars || cars.length === 0) {
+        container.innerHTML = "<p>No cars found.</p>";
+        return;
       }
+
+      cars.forEach(car => {
+        container.innerHTML += `
+          <div class="car-card">
+            <h2>${car.brand} ${car.model}</h2>
+            <img src="${car.imageUrl || 'no-image.jpg'}" alt="Car Image"/>
+            <p><strong>Price:</strong> ₹${car.price}</p>
+            <button onclick="viewDetails(${car.id})">More Details</button>
+          </div>
+        `;
+      });
     }
 
+    // Search
     function searchCars() {
-      const query = document.getElementById("search-input").value;
+      const query = document.getElementById("search-input").value.trim();
       let url = "/cars";
-      if(query) {
-        url += `?search=${encodeURIComponent(query)}`;
-      }
+      if (query) url += `?search=${encodeURIComponent(query)}`;
 
       fetch(url)
-        .then(res => res.json())
+        .then(res => {
+          if (res.status === 401) {
+            alert("Session expired. Please log in again.");
+            sessionStorage.removeItem("loggedInUser");
+            window.location.href = "login.html";
+            return [];
+          }
+          return res.json();
+        })
         .then(data => displayCars(data))
-        .catch(err => console.error(err));
+        .catch(err => console.error("Search error:", err));
     }
 
+    // View Details
     function viewDetails(id) {
       window.location.href = `cardetails.html?id=${id}`;
     }
 
-    // Load cars on page load
+    // Initialize
     loadCars();
   </script>
 </body>
