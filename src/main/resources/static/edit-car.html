@@ -83,29 +83,42 @@
   </form>
 
   <script>
-    const carId = new URLSearchParams(window.location.search).get("id");
+    const carId = new URLSearchParams(window.location.search).get('id');
 
-    // Fetch car details and pre-fill form
-    if(carId){
-      fetch(`/cars/${carId}`)
-        .then(res => res.json())
-        .then(car => {
-          document.getElementById("brand").value = car.brand;
-          document.getElementById("model").value = car.model;
-          document.getElementById("price").value = car.price;
-          document.getElementById("imageUrl").value = car.imageUrl;
-          document.getElementById("year").value = car.year;
-          document.getElementById("fuelType").value = car.fuelType;
-          document.getElementById("mileage").value = car.mileage;
-          document.getElementById("description").value = car.description;
-        })
-        .catch(err => console.error(err));
+    async function currentUser() {
+      try {
+        const res = await fetch('/auth/currentUser', { credentials: 'include' });
+        if (!res.ok) return null;
+        return await res.json();
+      } catch (e) { return null; }
     }
 
-    // Handle form submission
-    document.getElementById("editCarForm").addEventListener("submit", function(e){
-      e.preventDefault();
+    (async function initEdit() {
+      const user = await currentUser();
+      if (!user) { alert('Please login'); window.location.href='login.html'; return; }
+      const isAdmin = (user.roles || []).some(r => r.authority === 'ROLE_ADMIN');
+      if (!isAdmin) { alert('Access denied'); window.location.href='index.html'; return; }
 
+      if (!carId) { alert('No car'); window.location.href='index.html'; return; }
+      try {
+        const res = await fetch('/cars/' + encodeURIComponent(carId), { credentials: 'include' });
+        if (!res.ok) { alert('Failed to load car'); window.location.href='index.html'; return; }
+        const car = await res.json();
+        document.getElementById('brand').value = car.brand;
+        document.getElementById('model').value = car.model;
+        document.getElementById('price').value = car.price;
+        document.getElementById('imageUrl').value = car.imageUrl;
+        document.getElementById('year').value = car.year;
+        document.getElementById('fuelType').value = car.fuelType;
+        document.getElementById('mileage').value = car.mileage;
+        document.getElementById('description').value = car.description;
+      } catch (err) {
+        console.error(err); alert('Failed to load car');
+      }
+    })();
+
+    document.getElementById('editCarForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
       const updatedCar = {
         brand: document.getElementById("brand").value,
         model: document.getElementById("model").value,
@@ -116,19 +129,22 @@
         mileage: parseFloat(document.getElementById("mileage").value),
         description: document.getElementById("description").value
       };
-
-      fetch(`/cars/${carId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedCar)
-      })
-      .then(res => res.json())
-      .then(data => {
-        alert("Car updated successfully!");
-        window.location.href = `cardetails.html?id=${carId}`;
-      })
-      .catch(err => console.error(err));
+      try {
+        const res = await fetch('/cars/' + encodeURIComponent(carId), {
+          method: 'PUT',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedCar)
+        });
+        if (res.status === 401) { alert('Session expired'); window.location.href='login.html'; return; }
+        if (!res.ok) throw new Error('Update failed');
+        alert('Car updated');
+        window.location.href = 'cardetails.html?id=' + carId;
+      } catch (err) {
+        console.error(err); alert('Update failed');
+      }
     });
   </script>
+
 </body>
 </html>
